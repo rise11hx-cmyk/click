@@ -28,6 +28,8 @@ Unreleased
   keyword arguments like `color`. {issue}`2110` {pr}`3896`
 - Help pages no longer break a line within a hyphenated word, like an option
   name, or within a long word. {issue}`3362` {pr}`3902`
+- With `show_envvar=True`, an option's error message names the environment
+  variable derived from `auto_envvar_prefix`, not only one declared as `envvar`. {issue}`3914`
 
 ## Version 8.5.1
 

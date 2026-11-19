@@ -1180,6 +1180,29 @@ def test_missing_envvar(runner):
     assert "Error: Missing option '--foo'." in result.output
 
 
+def test_missing_envvar_auto_prefix(runner):
+    cli = click.Command(
+        "cli",
+        context_settings={"auto_envvar_prefix": "MYAPP"},
+        params=[click.Option(["--foo"], show_envvar=True, required=True)],
+    )
+    result = runner.invoke(cli)
+    assert result.exit_code == 2
+    assert "Error: Missing option '--foo' (env var: 'MYAPP_FOO')." in result.output
+
+
+def test_invalid_envvar_auto_prefix(runner, monkeypatch):
+    monkeypatch.setenv("MYAPP_PORT", "not-a-number")
+    cli = click.Command(
+        "cli",
+        context_settings={"auto_envvar_prefix": "MYAPP"},
+        params=[click.Option(["--port"], type=int, show_envvar=True, required=True)],
+    )
+    result = runner.invoke(cli)
+    assert result.exit_code == 2
+    assert "Error: Invalid value for '--port' (env var: 'MYAPP_PORT')" in result.output
+
+
 @pytest.mark.parametrize(
     ("envvar", "expected"),
     [

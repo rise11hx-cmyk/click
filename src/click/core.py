@@ -3401,10 +3401,29 @@ class Option(Parameter):
             value = value()
         return value
 
+    def _resolve_envvar_for_display(
+        self, ctx: Context | None
+    ) -> str | cabc.Sequence[str] | None:
+        envvar = self.envvar
+
+        if (
+            not envvar
+            and self.show_envvar
+            and self.allow_from_autoenv
+            and ctx is not None
+            and ctx.auto_envvar_prefix is not None
+            and self.name
+        ):
+            envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
+
+        return envvar
+
     def get_error_hint(self, ctx: Context | None) -> str:
         result = super().get_error_hint(ctx)
-        if self.show_envvar and self.envvar:
-            envvars = [self.envvar] if isinstance(self.envvar, str) else self.envvar
+        envvar = self._resolve_envvar_for_display(ctx)
+
+        if self.show_envvar and envvar:
+            envvars = [envvar] if isinstance(envvar, str) else envvar
             # An environment variable is allowed to feature a space or a comma on all
             # platforms, hence the quotes around each.
             var_str = ", ".join(f"'{var}'" for var in envvars)
@@ -3600,14 +3619,7 @@ class Option(Parameter):
         extra: types.OptionHelpExtra = {}
 
         if self.show_envvar:
-            envvar = self.envvar
-
-            if not envvar and (
-                self.allow_from_autoenv
-                and ctx.auto_envvar_prefix is not None
-                and self.name
-            ):
-                envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
+            envvar = self._resolve_envvar_for_display(ctx)
 
             if envvar:
                 if isinstance(envvar, str):
